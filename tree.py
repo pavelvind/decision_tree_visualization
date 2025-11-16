@@ -87,10 +87,7 @@ def build_tree(x, y):
         "right": right_child
     }
 
-'''recursive'''
 def classify(sample, node):
-    # TODO: 
-    
     # base case -> leaf reached
     if node['leaf']:
         return node['prediction']
