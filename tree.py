@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_breast_cancer # comes with builtin target/features
 from collections import Counter
+import json
 
 dataset = load_breast_cancer(as_frame=True) # as pandas bunch
 df = dataset['frame'] # convert to df
@@ -11,7 +12,7 @@ features = df.drop(columns=['target']) # yx
 label_count = Counter(labels) # -> Counter({0: 357, 1: 212})
 #print(df.columns)
 #print(df.head())
-print(features.head())
+#print(features.head())
 
 def giny(lbl):
     impurity = 1
@@ -63,19 +64,23 @@ def find_best_split(x, y):
 '''recursively build tree'''
 def build_tree(x, y):
     
-    best_feature, best_threshold, best_gain = find_best_split(dataset, labels)
+    best_feature, best_threshold, best_gain = find_best_split(x, y)
     
-    # base case -> cannot be split further (gain == 0)
-    if best_gain == 0:
-        return Counter(labels)
+    # base case -> cannot be split further (gain == 0) 
+    if best_gain == 0 or best_feature is None:
+        counts = Counter(y)
+        prediction = counts.most_common(1)[0][0]
+        # return leaf
+        return {"leaf": True, "prediction": prediction, "counts": counts}
 
     # recursive case
     x_left, y_left, x_right, y_right = split(x, y, best_feature, best_threshold)
     left_child = build_tree(x_left, y_left)
     right_child = build_tree(x_right, y_right)
 
+    # this returns internal nodes that links children
     return {
-        "leaf": True,
+        "leaf": False,
         "feature": best_feature,
         "threshold": best_threshold,
         "left": left_child,
@@ -83,8 +88,33 @@ def build_tree(x, y):
     }
 
 '''recursive'''
-def classify(sample, tree):
+def classify(sample, node):
     # TODO: 
-    # leaf -> base case
-    # node -> recursive case
-    ...
+    
+    # base case -> leaf reached
+    if node['leaf']:
+        return node['prediction']
+    # compare values @ the current node -> threshold (defined for each value)
+    if sample[node['feature']] < node['threshold']:
+        return classify(sample, node['left'])
+    else: 
+        return classify(sample, node['right'])
+    
+
+def print_tree(node):
+    if node['leaf']:
+        print(node)
+        return
+    print(node)
+    print_tree(node['left'])
+    print_tree(node['right'])
+
+def main():
+    tree = build_tree(features, labels)
+    #print_tree(tree)
+    sample = features.iloc[0]
+    prediction = classify(sample, tree)
+    print(f"sample actual={labels.iloc[0]} predicted={prediction}")
+
+if __name__ == "__main__":
+    main()
