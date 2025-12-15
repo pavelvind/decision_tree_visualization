@@ -41,7 +41,12 @@ def find_best_split(x, y):
     # loop thru all features to find the best gini
     for feature in x.columns:
         values = x[feature].unique()
-        values.sort()
+
+        # PERFROMANCE: throw away the numbers and create 10 representatives
+        if len(values) > 10:
+            values = np.percentile(values, np.linspace(0, 100, 10))
+        else:
+            values.sort()
         
         # define threshold for each feature
         for threshold in values:
@@ -97,10 +102,11 @@ def to_graphviz(tree):
 
         if node['leaf']:
             label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
-            dot.node(node_id, label=label, shape='box')
+            color = "lightblue" if node['prediction'] == 0 else "lightsalmon"
+            dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
         else:
             label = f"{node['feature']} < {node['threshold']:.2f}"
-            dot.node(node_id, label=label, shape='ellipse')
+            dot.node(node_id, label=label, shape='ellipse', style='filled', fillcolor="lightgrey")
             
             add_nodes_edges(node['left'], dot, parent_id=node_id, edge_label="True")
             add_nodes_edges(node['right'], dot, parent_id=node_id, edge_label="False")
@@ -131,4 +137,3 @@ def print_tree(node):
     print(node)
     print_tree(node['left'])
     print_tree(node['right'])
-
