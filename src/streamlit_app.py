@@ -1,6 +1,6 @@
 import streamlit as st
 from sklearn.datasets import load_breast_cancer # comes with builtin target/features
-from src.gini import build_tree, classify, to_graphviz
+from gini import build_tree, classify, to_graphviz
 from collections import Counter
 import pandas as pd
 
