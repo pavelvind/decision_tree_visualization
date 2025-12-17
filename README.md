@@ -4,7 +4,7 @@ This project is a CART (binary splits + Gini impurity) decision tree implementat
 `streamlit_app.py` wraps it in a lightweight Streamlit UI for exploring predictions sample-by-sample.2
 
 ## Live demo
-[decisiontreevis.streamlit.app](https://decisiontreevis.streamlit.app)
+[pavelvind-decision-tree.streamlit.app](https://pavelvind-decision-tree.streamlit.app)
 
 ## Run locally
 
