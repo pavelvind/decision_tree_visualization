@@ -116,7 +116,51 @@ def to_graphviz(tree):
             
     add_nodes_edges(tree, dot)
     return dot
+
+# color: red
+def highligh_gprah(tree, sample):
+    dot = graphviz.Digraph('DecisionTree', comment='Decision Tree')
     
+    def add_nodes_edges(node, dot, parent_id=None, edge_label="", isOnPath=True):
+        node_id = str(id(node))
+
+        # leaf
+        if node['leaf']:
+            if isOnPath:
+                label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
+                color = "red" if node['prediction'] == 0 else "lightsalmon"
+                dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
+            else:
+                label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
+                color = "lightblue" if node['prediction'] == 0 else "lightsalmon"
+                dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
+        
+        # node
+        else:
+            label = f"{node['feature']} < {node['threshold']:.2f}"
+            dot.node(node_id, label=label, shape='ellipse', style='filled', fillcolor="lightgrey")
+
+            is_left_path = False
+            is_right_path = False
+
+            if  isOnPath:
+                feature_value = sample[node['feature']]
+                
+                if feature_value < node['threshold']:
+                    is_left_path = True
+                else:
+                    is_right_path = True
+            # decide based on based feature and threshold if its on path or no
+            feature_value = sample[node['feature']] #important
+            add_nodes_edges(node['left'], dot, parent_id=node_id, edge_label="True", isOnPath=is_left_path)
+            add_nodes_edges(node['right'], dot, parent_id=node_id, edge_label="False", isOnPath=is_right_path)
+
+        if parent_id:
+            dot.edge(parent_id, node_id, label=edge_label)
+            
+    add_nodes_edges(tree, dot)
+    return dot
+            
            
 
 def classify(sample, node):
