@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 from sklearn.datasets import load_breast_cancer, load_iris, load_wine
 
-from gini import build_tree, classify, highlight_graph, to_graphviz
+from src.gini import build_tree, classify, highlight_graph, to_graphviz
 
 
 st.set_page_config(
