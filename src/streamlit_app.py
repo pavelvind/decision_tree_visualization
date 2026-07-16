@@ -1,11 +1,19 @@
 from collections import Counter
 from html import escape
+from pathlib import Path
+import sys
 
 import pandas as pd
 import streamlit as st
 from sklearn.datasets import load_breast_cancer, load_iris, load_wine
 
-from src.gini import build_tree, classify, highlight_graph, to_graphviz
+# Streamlit Cloud can launch this file with either the repository root or `src`
+# as its working directory. Resolve sibling modules from this file's location.
+SOURCE_DIR = Path(__file__).resolve().parent
+if str(SOURCE_DIR) not in sys.path:
+    sys.path.insert(0, str(SOURCE_DIR))
+
+from gini import build_tree, classify, highlight_graph, to_graphviz
 
 
 st.set_page_config(
