@@ -1,7 +1,8 @@
 # Decision Tree Visualizer
 
-This project is a CART (binary splits + Gini impurity) decision tree implementation built from scratch  
-`streamlit_app.py` wraps it in a lightweight Streamlit UI for exploring predictions sample-by-sample.2
+This project is a CART (binary splits + Gini impurity) decision tree classifier built from scratch.
+
+The Streamlit interface lets you compare datasets, tune tree depth, and trace predictions sample by sample.
 
 ## Live demo
 [pavelvind-decision-tree.streamlit.app](https://pavelvind-decision-tree.streamlit.app)
@@ -10,6 +11,5 @@ This project is a CART (binary splits + Gini impurity) decision tree implementat
 
 ```bash
 pip install -r requirements.txt
-streamlit run streamlit_app.py
+streamlit run src/streamlit_app.py
 ```
-

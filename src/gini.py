@@ -93,73 +93,130 @@ def build_tree(x, y, depth=0, maxdepth=5):
         "right": right_child
     }
 
-'''this funciton converts the dictionary into dot format language for graphviz'''
+'''this function converts the dictionary into dot format language for graphviz'''
+def _graph():
+    dot = graphviz.Digraph('DecisionTree', comment='Decision Tree')
+    dot.attr(
+        bgcolor='transparent',
+        pad='0.25',
+        nodesep='0.3',
+        ranksep='0.55',
+        splines='ortho'
+    )
+    dot.attr(
+        'node',
+        shape='box',
+        style='rounded,filled',
+        fontname='Helvetica',
+        fontsize='11',
+        color='#d9e2dc',
+        fontcolor='#17211b',
+        penwidth='1.2',
+        margin='0.18,0.11'
+    )
+    dot.attr(
+        'edge',
+        fontname='Helvetica',
+        fontsize='9',
+        color='#b9c5bd',
+        fontcolor='#66736b',
+        arrowsize='0.65'
+    )
+    return dot
+
+
+def _leaf_label(node):
+    counts = '  ·  '.join(f'{label}: {count}' for label, count in node['counts'].items())
+    samples = sum(node['counts'].values())
+    return f"Prediction · class {node['prediction']}\n{samples} samples  |  {counts}"
+
+
+def _leaf_color(prediction):
+    colors = ['#e4f3ed', '#fff0d6', '#eee9fb', '#fbe8ec']
+    return colors[int(prediction) % len(colors)]
+
+
 def to_graphviz(tree):
-    dot = graphviz.Digraph('DecisionTree', comment='Decision Tree')
+    dot = _graph()
 
-    def add_nodes_edges(node, dot, parent_id=None, edge_label=""):
+    def add_nodes_edges(node, parent_id=None, edge_label=""):
         node_id = str(id(node))
 
         if node['leaf']:
-            label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
-            color = "lightblue" if node['prediction'] == 0 else "lightsalmon"
-            dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
+            dot.node(
+                node_id,
+                label=_leaf_label(node),
+                fillcolor=_leaf_color(node['prediction'])
+            )
         else:
-            label = f"{node['feature']} < {node['threshold']:.2f}"
-            dot.node(node_id, label=label, shape='ellipse', style='filled', fillcolor="lightgrey")
-            
-            add_nodes_edges(node['left'], dot, parent_id=node_id, edge_label="True")
-            add_nodes_edges(node['right'], dot, parent_id=node_id, edge_label="False")
+            label = f"{node['feature']}\n< {node['threshold']:.2f}"
+            dot.node(node_id, label=label, fillcolor='#f6f8f6')
+            add_nodes_edges(node['left'], parent_id=node_id, edge_label="True")
+            add_nodes_edges(node['right'], parent_id=node_id, edge_label="False")
 
         if parent_id:
             dot.edge(parent_id, node_id, label=edge_label)
-            
-    add_nodes_edges(tree, dot)
+
+    add_nodes_edges(tree)
     return dot
 
-# color: red
-def highligh_gprah(tree, sample):
-    dot = graphviz.Digraph('DecisionTree', comment='Decision Tree')
-    
-    def add_nodes_edges(node, dot, parent_id=None, edge_label="", isOnPath=True):
+
+def highlight_graph(tree, sample):
+    dot = _graph()
+
+    def add_nodes_edges(node, parent_id=None, edge_label="", is_on_path=True):
         node_id = str(id(node))
+        path_color = '#16805d'
 
-        # leaf
         if node['leaf']:
-            if isOnPath:
-                label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
-                color = "red" if node['prediction'] == 0 else "lightsalmon"
-                dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
-            else:
-                label = f"Prediction: {node['prediction']}\nCounts: {dict(node['counts'])}"
-                color = "lightblue" if node['prediction'] == 0 else "lightsalmon"
-                dot.node(node_id, label=label, shape='box', style='filled', fillcolor=color)
-        
-        # node
+            dot.node(
+                node_id,
+                label=_leaf_label(node),
+                fillcolor='#daf2e7' if is_on_path else _leaf_color(node['prediction']),
+                color=path_color if is_on_path else '#d9e2dc',
+                penwidth='2.2' if is_on_path else '1.2'
+            )
         else:
-            label = f"{node['feature']} < {node['threshold']:.2f}"
-            dot.node(node_id, label=label, shape='ellipse', style='filled', fillcolor="lightgrey")
+            label = f"{node['feature']}\n< {node['threshold']:.2f}"
+            dot.node(
+                node_id,
+                label=label,
+                fillcolor='#e4f3ed' if is_on_path else '#f6f8f6',
+                color=path_color if is_on_path else '#d9e2dc',
+                penwidth='2.2' if is_on_path else '1.2'
+            )
 
-            is_left_path = False
-            is_right_path = False
-
-            if  isOnPath:
-                feature_value = sample[node['feature']]
-                
-                if feature_value < node['threshold']:
-                    is_left_path = True
-                else:
-                    is_right_path = True
-            # decide based on based feature and threshold if its on path or no
-            feature_value = sample[node['feature']] #important
-            add_nodes_edges(node['left'], dot, parent_id=node_id, edge_label="True", isOnPath=is_left_path)
-            add_nodes_edges(node['right'], dot, parent_id=node_id, edge_label="False", isOnPath=is_right_path)
+            goes_left = is_on_path and sample[node['feature']] < node['threshold']
+            goes_right = is_on_path and not goes_left
+            add_nodes_edges(
+                node['left'],
+                parent_id=node_id,
+                edge_label="True",
+                is_on_path=goes_left
+            )
+            add_nodes_edges(
+                node['right'],
+                parent_id=node_id,
+                edge_label="False",
+                is_on_path=goes_right
+            )
 
         if parent_id:
-            dot.edge(parent_id, node_id, label=edge_label)
-            
-    add_nodes_edges(tree, dot)
+            dot.edge(
+                parent_id,
+                node_id,
+                label=edge_label,
+                color=path_color if is_on_path else '#b9c5bd',
+                fontcolor=path_color if is_on_path else '#66736b',
+                penwidth='2.2' if is_on_path else '1.0'
+            )
+
+    add_nodes_edges(tree)
     return dot
+
+
+# Backwards-compatible alias for the original public API.
+highligh_gprah = highlight_graph
             
            
 
